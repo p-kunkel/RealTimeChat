@@ -3,6 +3,7 @@ package controllers
 import (
 	"RealTimeChat/helpers"
 	"RealTimeChat/models"
+	"errors"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,11 @@ func CreateUser(c *gin.Context) {
 
 	if err = user.Password.GenerateHash(); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	if !helpers.IsValidEmail(user.Email) {
+		HandleErrResponse(c, MakeErrResponse(errors.New("invalid email")))
 		return
 	}
 
