@@ -23,6 +23,11 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
+	if err = user.Password.GenerateHash(); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
 	if err = user.Create(); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
 		return
