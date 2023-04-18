@@ -109,6 +109,6 @@ func (p *Password) Scan(val interface{}) error {
 		return nil
 	}
 
-	p.Hash = val.([]byte)
+	p.Hash = []byte(val.(string))
 	return nil
 }
