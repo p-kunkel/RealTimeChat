@@ -16,7 +16,7 @@ type ErrorResponse struct {
 
 func HandleErrResponse(c *gin.Context, errResp ErrorResponse) {
 	errResp.Path = c.FullPath()
-	if errResp.Message != "" {
+	if errResp.Message == "" {
 		errResp.Message = errResp.Err.Error()
 	}
 
