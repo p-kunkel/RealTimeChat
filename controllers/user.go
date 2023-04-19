@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"RealTimeChat/config"
 	"RealTimeChat/helpers"
 	"RealTimeChat/models"
 	"errors"
@@ -12,6 +13,7 @@ func CreateUser(c *gin.Context) {
 	var (
 		err  error
 		user models.User
+		st   models.LoginToken
 	)
 
 	if err = c.ShouldBindJSON(&user); err != nil {
@@ -39,13 +41,19 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, user)
+	if st, err = models.NewLoginToken(user, config.DB); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	c.JSON(200, st)
 }
 
 func LoginUser(c *gin.Context) {
 	var (
 		user models.User
 		err  error
+		st   models.LoginToken
 	)
 
 	if err = c.ShouldBindJSON(&user.LoginData); err != nil {
@@ -58,5 +66,10 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, user)
+	if st, err = models.NewLoginToken(user, config.DB); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	c.JSON(200, st)
 }

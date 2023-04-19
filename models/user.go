@@ -8,7 +8,7 @@ import (
 )
 
 type User struct {
-	Id          uint64 `json:"id" gorm:"type:bigserial;primarykey"`
+	Id          uint64 `json:"id" gorm:"type:int8;autoIncrement;primaryKey"`
 	VisibleName string `json:"visible_name" gorm:"type:varchar;not null" chat:"refers_to:create;required:true"`
 	LoginData
 }
