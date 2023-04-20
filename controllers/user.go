@@ -48,28 +48,3 @@ func CreateUser(c *gin.Context) {
 
 	c.JSON(200, st)
 }
-
-func LoginUser(c *gin.Context) {
-	var (
-		user models.User
-		err  error
-		st   models.LoginToken
-	)
-
-	if err = c.ShouldBindJSON(&user.LoginData); err != nil {
-		HandleErrResponse(c, MakeErrResponse(err))
-		return
-	}
-
-	if err = user.Login(); err != nil {
-		HandleErrResponse(c, MakeErrResponse(err))
-		return
-	}
-
-	if st, err = models.NewLoginToken(user, config.DB); err != nil {
-		HandleErrResponse(c, MakeErrResponse(err))
-		return
-	}
-
-	c.JSON(200, st)
-}

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,13 +29,13 @@ func MakeErrResponse(err error, statusCode ...int) ErrorResponse {
 		Err: err,
 	}
 
-	errResp.setStatusOrGetDeafult()
+	errResp.setStatusOrGetDeafult(statusCode...)
 
 	return errResp
 }
 
 func (e *ErrorResponse) setStatusOrGetDeafult(statusCode ...int) {
-	e.StatusCode = 400
+	e.StatusCode = http.StatusBadRequest
 	if len(statusCode) > 0 {
 		e.StatusCode = statusCode[0]
 	}

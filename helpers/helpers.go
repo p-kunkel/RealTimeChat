@@ -5,6 +5,8 @@ import (
 	"net"
 	"regexp"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
@@ -38,4 +40,16 @@ func IsValidEmail(e string) bool {
 		return false
 	}
 	return true
+}
+
+func RecordMustExist(DB *gorm.DB) error {
+	if DB.Error != nil {
+		return DB.Error
+	}
+
+	if DB.RowsAffected <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }

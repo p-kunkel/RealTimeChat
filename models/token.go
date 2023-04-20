@@ -1,7 +1,9 @@
 package models
 
 import (
+	"RealTimeChat/config"
 	dict "RealTimeChat/dictionaries"
+	"RealTimeChat/helpers"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -52,7 +54,7 @@ func NewToken(TokenType dict.DTokenType, DB *gorm.DB) (Token, error) {
 func NewLoginToken(user User, DB *gorm.DB) (LoginToken, error) {
 	var (
 		at, rt Token
-		st     = LoginToken{User: &user}
+		lt     = LoginToken{User: &user}
 		err    error
 	)
 
@@ -80,9 +82,41 @@ func NewLoginToken(user User, DB *gorm.DB) (LoginToken, error) {
 		return LoginToken{}, err
 	}
 
-	st.AccessToken = at.Token
-	st.RefreshToken = rt.Token
-	return st, DB.Create(&[]Token{at, rt}).Error
+	lt.AccessToken = at.Token
+	lt.RefreshToken = rt.Token
+	return lt, DB.Create(&[]Token{at, rt}).Error
+}
+
+func (lt *LoginToken) Refresh() error {
+	var (
+		err error
+		t   Token
+	)
+
+	t.Token = lt.RefreshToken
+	if err = t.Decode([]byte("SECRET_REFRESH_TOKEN")); err != nil {
+		return err
+	}
+
+	if t.ValidType(dict.Dicts.TokenType["refresh_token"]); err != nil {
+		return err
+	}
+
+	if err = config.DB.Transaction(func(DB *gorm.DB) error {
+		if err = t.DeleteFromDB(DB); err != nil {
+			return err
+		}
+
+		if *lt, err = NewLoginToken(User{Id: t.UserId}, DB); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (t *Token) GenerateJWT(secret []byte) error {
@@ -131,8 +165,8 @@ func (t *Token) UnmarshalClaims() error {
 	return nil
 }
 
-func (t *Token) Decode(Secret string) error {
-	if err := t.Valid([]byte(Secret)); err != nil {
+func (t *Token) Decode(secret []byte) error {
+	if err := t.Valid(secret); err != nil {
 		return err
 	}
 	return t.UnmarshalClaims()
@@ -161,6 +195,28 @@ func (t *Token) Valid(secretKey []byte) error {
 	return nil
 }
 
+func (t *Token) ValidType(tType dict.DTokenType) error {
+	if t.TypeId != tType.Id {
+		return errors.New("invalid token type")
+	}
+	return nil
+}
+
 func (t *Token) AddToDB(DB *gorm.DB) error {
 	return DB.Create(&t).Error
+}
+
+func (t *Token) DeleteFromDB(DB *gorm.DB) error {
+	switch t.TypeId {
+	case dict.Dicts.TokenType["access_token"].Id:
+		DB = DB.Where("uuid IN (?, ?)", t.Uuid, t.RtUuid)
+
+	case dict.Dicts.TokenType["refresh_token"].Id:
+		DB = DB.Where("? IN (uuid, rt_uuid)", t.Uuid)
+
+	default:
+		return errors.New("delete token: invalid token type")
+	}
+
+	return helpers.RecordMustExist(DB.Delete(&t))
 }
