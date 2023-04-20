@@ -48,7 +48,7 @@ func (u *User) Login() error {
 }
 
 func (u *User) Get(scopes ...func(*gorm.DB) *gorm.DB) error {
-	return config.DB.Scopes(scopes...).Find(&u).Error
+	return config.DB.Scopes(scopes...).Where("id = ?", u.Id).Find(&u).Error
 }
 
 func (*User) TableName() string {

@@ -48,3 +48,24 @@ func CreateUser(c *gin.Context) {
 
 	c.JSON(200, st)
 }
+
+func GetUser(c *gin.Context) {
+	var (
+		err  error
+		user models.User
+		s    models.Session
+	)
+
+	if err = s.GetFromContext(c); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	user.Id = s.UserId
+	if err = user.Get(); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	c.JSON(200, user)
+}

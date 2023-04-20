@@ -22,6 +22,7 @@ func HandleErrResponse(c *gin.Context, errResp ErrorResponse) {
 	}
 
 	c.JSON(errResp.StatusCode, errResp)
+	c.Abort()
 }
 
 func MakeErrResponse(err error, statusCode ...int) ErrorResponse {

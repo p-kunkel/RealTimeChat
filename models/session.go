@@ -10,12 +10,20 @@ type Session struct {
 	UserId uint64
 }
 
+func (s *Session) New(t Token) error {
+	if s == nil {
+		return errors.New("nil session")
+	}
+	s.UserId = t.UserId
+	return nil
+}
+
 func (s *Session) SetInContext(c *gin.Context) error {
 	if s == nil {
 		return errors.New("session is null")
 	}
 
-	c.Set("session", s)
+	c.Set("session", *s)
 	return nil
 }
 
@@ -29,9 +37,8 @@ func (s *Session) GetFromContext(c *gin.Context) error {
 		return errors.New("no session in context")
 	}
 
-	if s, ok = v.(*Session); !ok {
+	if *s, ok = v.(Session); !ok {
 		return errors.New("invalid session model")
 	}
-
 	return nil
 }

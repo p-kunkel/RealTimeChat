@@ -7,8 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -74,11 +77,11 @@ func NewLoginToken(user User, DB *gorm.DB) (LoginToken, error) {
 	at.UserId = user.Id
 	rt.UserId = user.Id
 
-	if err = at.GenerateJWT([]byte("SECRET_ACCESS_TOKEN")); err != nil {
+	if err = at.GenerateJWT([]byte(os.Getenv("SECRET_ACCESS_TOKEN"))); err != nil {
 		return LoginToken{}, err
 	}
 
-	if err = rt.GenerateJWT([]byte("SECRET_REFRESH_TOKEN")); err != nil {
+	if err = rt.GenerateJWT([]byte(os.Getenv("SECRET_REFRESH_TOKEN"))); err != nil {
 		return LoginToken{}, err
 	}
 
@@ -94,7 +97,7 @@ func (lt *LoginToken) Refresh() error {
 	)
 
 	t.Token = lt.RefreshToken
-	if err = t.Decode([]byte("SECRET_REFRESH_TOKEN")); err != nil {
+	if err = t.Decode([]byte(os.Getenv("SECRET_REFRESH_TOKEN"))); err != nil {
 		return err
 	}
 
@@ -162,6 +165,7 @@ func (t *Token) UnmarshalClaims() error {
 	if err := json.Unmarshal(b, &t); err != nil {
 		return fmt.Errorf("error form marshal token: %s", err)
 	}
+	t.claims = nil
 	return nil
 }
 
@@ -199,6 +203,23 @@ func (t *Token) ValidType(tType dict.DTokenType) error {
 	if t.TypeId != tType.Id {
 		return errors.New("invalid token type")
 	}
+	return nil
+}
+
+func (t *Token) GetFromHeader(c *gin.Context) error {
+	var (
+		prefix = "bearer "
+	)
+
+	if t.Token = c.GetHeader("Authorization"); t.Token == "" {
+		return errors.New("invalid authorization")
+	}
+
+	if !strings.HasPrefix(strings.ToLower(t.Token), prefix) {
+		return errors.New("invalid token")
+	}
+
+	t.Token = t.Token[len(prefix):]
 	return nil
 }
 

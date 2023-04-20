@@ -1,7 +1,8 @@
 package mappings
 
 import (
-	"RealTimeChat/controllers"
+	contr "RealTimeChat/controllers"
+	middl "RealTimeChat/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,7 +10,14 @@ import (
 func userMapping(r *gin.Engine) {
 
 	user := r.Group("user")
-	user.POST("registration", controllers.CreateUser)
-	user.POST("login", controllers.LoginUser)
-	user.POST("refresh_token", controllers.RefreshToken)
+	{
+		user.POST("registration", contr.CreateUser)
+		user.POST("login", contr.LoginUser)
+		user.POST("refresh_token", contr.RefreshToken)
+	}
+	user.Use(middl.Authenticate())
+	{
+		user.GET("", contr.GetUser)
+	}
+
 }
