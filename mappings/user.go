@@ -8,7 +8,6 @@ import (
 )
 
 func userMapping(r *gin.Engine) {
-
 	user := r.Group("user")
 	{
 		user.POST("registration", contr.CreateUser)

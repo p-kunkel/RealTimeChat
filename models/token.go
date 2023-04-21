@@ -56,61 +56,61 @@ func NewToken(TokenType dict.DTokenType, DB *gorm.DB) (Token, error) {
 
 func NewLoginToken(user User, DB *gorm.DB) (LoginToken, error) {
 	var (
-		at, rt Token
-		lt     = LoginToken{User: &user}
-		err    error
+		accessToken, refreshToken Token
+		loginTokens               = LoginToken{User: &user}
+		err                       error
 	)
 
 	if user.Id == 0 {
 		return LoginToken{}, errors.New("invalid user_id")
 	}
 
-	if at, err = NewToken(dict.Dicts.TokenType["access_token"], DB); err != nil {
+	if accessToken, err = NewToken(dict.Dicts.TokenType["access_token"], DB); err != nil {
 		return LoginToken{}, err
 	}
 
-	if rt, err = NewToken(dict.Dicts.TokenType["refresh_token"], DB); err != nil {
+	if refreshToken, err = NewToken(dict.Dicts.TokenType["refresh_token"], DB); err != nil {
 		return LoginToken{}, err
 	}
 
-	at.RtUuid = rt.Uuid
-	at.UserId = user.Id
-	rt.UserId = user.Id
+	accessToken.RtUuid = refreshToken.Uuid
+	accessToken.UserId = user.Id
+	refreshToken.UserId = user.Id
 
-	if err = at.GenerateJWT([]byte(os.Getenv("SECRET_ACCESS_TOKEN"))); err != nil {
+	if err = accessToken.GenerateJWT([]byte(os.Getenv("SECRET_ACCESS_TOKEN"))); err != nil {
 		return LoginToken{}, err
 	}
 
-	if err = rt.GenerateJWT([]byte(os.Getenv("SECRET_REFRESH_TOKEN"))); err != nil {
+	if err = refreshToken.GenerateJWT([]byte(os.Getenv("SECRET_REFRESH_TOKEN"))); err != nil {
 		return LoginToken{}, err
 	}
 
-	lt.AccessToken = at.Token
-	lt.RefreshToken = rt.Token
-	return lt, DB.Create(&[]Token{at, rt}).Error
+	loginTokens.AccessToken = accessToken.Token
+	loginTokens.RefreshToken = refreshToken.Token
+	return loginTokens, DB.Create(&[]Token{accessToken, refreshToken}).Error
 }
 
 func (lt *LoginToken) Refresh() error {
 	var (
-		err error
-		t   Token
+		err   error
+		token Token
 	)
 
-	t.Token = lt.RefreshToken
-	if err = t.Decode([]byte(os.Getenv("SECRET_REFRESH_TOKEN"))); err != nil {
+	token.Token = lt.RefreshToken
+	if err = token.Decode([]byte(os.Getenv("SECRET_REFRESH_TOKEN"))); err != nil {
 		return err
 	}
 
-	if t.ValidType(dict.Dicts.TokenType["refresh_token"]); err != nil {
+	if token.ValidType(dict.Dicts.TokenType["refresh_token"]); err != nil {
 		return err
 	}
 
 	if err = config.DB.Transaction(func(DB *gorm.DB) error {
-		if err = t.DeleteFromDB(DB); err != nil {
+		if err = token.DeleteFromDB(DB); err != nil {
 			return err
 		}
 
-		if *lt, err = NewLoginToken(User{Id: t.UserId}, DB); err != nil {
+		if *lt, err = NewLoginToken(User{Id: token.UserId}, DB); err != nil {
 			return err
 		}
 
@@ -223,7 +223,7 @@ func (t *Token) GetFromHeader(c *gin.Context) error {
 	return nil
 }
 
-func (t *Token) AddToDB(DB *gorm.DB) error {
+func (t *Token) Create(DB *gorm.DB) error {
 	return DB.Create(&t).Error
 }
 

@@ -10,9 +10,9 @@ import (
 
 func LoginUser(c *gin.Context) {
 	var (
-		user models.User
-		err  error
-		lt   models.LoginToken
+		user       models.User
+		err        error
+		loginToken models.LoginToken
 	)
 
 	if err = c.ShouldBindJSON(&user.LoginData); err != nil {
@@ -25,29 +25,29 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	if lt, err = models.NewLoginToken(user, config.DB); err != nil {
+	if loginToken, err = models.NewLoginToken(user, config.DB); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
 		return
 	}
 
-	c.JSON(200, lt)
+	c.JSON(200, loginToken)
 }
 
 func RefreshToken(c *gin.Context) {
 	var (
-		err error
-		lt  models.LoginToken
+		err        error
+		loginToken models.LoginToken
 	)
 
-	if err = c.ShouldBindJSON(&lt); err != nil {
+	if err = c.ShouldBindJSON(&loginToken); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
 		return
 	}
 
-	if err = lt.Refresh(); err != nil {
+	if err = loginToken.Refresh(); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err, http.StatusUnauthorized))
 		return
 	}
 
-	c.JSON(200, lt)
+	c.JSON(200, loginToken)
 }

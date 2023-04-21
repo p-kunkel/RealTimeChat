@@ -11,9 +11,9 @@ import (
 
 func CreateUser(c *gin.Context) {
 	var (
-		err  error
-		user models.User
-		st   models.LoginToken
+		err        error
+		user       models.User
+		loginToken models.LoginToken
 	)
 
 	if err = c.ShouldBindJSON(&user); err != nil {
@@ -41,28 +41,28 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	if st, err = models.NewLoginToken(user, config.DB); err != nil {
+	if loginToken, err = models.NewLoginToken(user, config.DB); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
 		return
 	}
 
-	c.JSON(200, st)
+	c.JSON(200, loginToken)
 }
 
 func GetUser(c *gin.Context) {
 	var (
-		err  error
-		user models.User
-		s    models.Session
+		err     error
+		user    models.User
+		session models.Session
 	)
 
-	if err = s.GetFromContext(c); err != nil {
+	if err = session.GetFromContext(c); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
 		return
 	}
 
-	user.Id = s.UserId
-	if err = user.Get(); err != nil {
+	user.Id = session.UserId
+	if err = user.GetById(); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
 		return
 	}

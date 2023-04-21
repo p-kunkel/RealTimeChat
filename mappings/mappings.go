@@ -6,6 +6,7 @@ func RunServer() error {
 	r := gin.Default()
 
 	userMapping(r)
+	chatMapping(r)
 
 	return r.Run()
 }

@@ -35,9 +35,7 @@ func (u *User) Login() error {
 
 	pass = u.Password.InputPassword
 
-	if err = u.Get(func(db *gorm.DB) *gorm.DB {
-		return db.Where("email = ?", u.Email)
-	}); err != nil {
+	if err = u.FindByEmail(); err != nil {
 		return err
 	}
 
@@ -47,8 +45,18 @@ func (u *User) Login() error {
 	return nil
 }
 
-func (u *User) Get(scopes ...func(*gorm.DB) *gorm.DB) error {
-	return config.DB.Scopes(scopes...).Where("id = ?", u.Id).Find(&u).Error
+func (u *User) FindByEmail(scopes ...func(*gorm.DB) *gorm.DB) error {
+	scopes = append(scopes, func(db *gorm.DB) *gorm.DB { return db.Where("email = ?", u.Email) })
+	return u.Find(scopes...)
+}
+
+func (u *User) FindById(scopes ...func(*gorm.DB) *gorm.DB) error {
+	scopes = append(scopes, func(db *gorm.DB) *gorm.DB { return db.Where("id = ?", u.Id) })
+	return u.Find(scopes...)
+}
+
+func (u *User) Find(scopes ...func(*gorm.DB) *gorm.DB) error {
+	return config.DB.Scopes(scopes...).Find(&u).Error
 }
 
 func (*User) TableName() string {
