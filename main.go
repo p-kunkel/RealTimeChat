@@ -6,7 +6,9 @@ import (
 	"RealTimeChat/mappings"
 	"RealTimeChat/models"
 	"flag"
+	"fmt"
 	"log"
+	"os"
 )
 
 func main() {
@@ -27,6 +29,8 @@ func main() {
 		if err = models.DBAutoMigrate(); err != nil {
 			log.Fatalf("models migration error: %s", err)
 		}
+		fmt.Println("\nthe migration was successful")
+		os.Exit(0)
 	}
 
 	if err = dict.Dicts.LoadFromDB(); err != nil {

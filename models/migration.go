@@ -13,6 +13,7 @@ func DBAutoMigrate() error {
 	return config.DB.AutoMigrate(
 		User{},
 		dict.DTokenType{},
+		dict.DChatRole{},
 		Token{},
 		ChatRoom{},
 		ChatMember{},

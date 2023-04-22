@@ -18,8 +18,8 @@ type LoginData struct {
 	Password *Password `json:"password,omitempty" gorm:"column:password" chat:"refers_to:create;required:true"`
 }
 
-func (u *User) Create() error {
-	return config.DB.Create(&u).Error
+func (u *User) Create(DB *gorm.DB) error {
+	return DB.Create(&u).Error
 }
 
 func (u *User) Login() error {

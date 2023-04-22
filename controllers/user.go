@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func CreateUser(c *gin.Context) {
@@ -36,12 +37,17 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	if err = user.Create(); err != nil {
-		HandleErrResponse(c, MakeErrResponse(err))
-		return
-	}
+	if err = config.DB.Transaction(func(tx *gorm.DB) error {
+		if err = user.Create(tx); err != nil {
+			return err
+		}
 
-	if loginToken, err = models.NewLoginToken(user, config.DB); err != nil {
+		if loginToken, err = models.NewLoginToken(user, tx); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
 		return
 	}
@@ -62,7 +68,7 @@ func GetUser(c *gin.Context) {
 	}
 
 	user.Id = session.UserId
-	if err = user.GetById(); err != nil {
+	if err = user.FindById(); err != nil {
 		HandleErrResponse(c, MakeErrResponse(err))
 		return
 	}

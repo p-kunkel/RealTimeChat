@@ -1,7 +1,9 @@
 package models
 
 import (
-	"RealTimeChat/config"
+	dict "RealTimeChat/dictionaries"
+
+	"errors"
 	"time"
 
 	"github.com/lib/pq"
@@ -24,18 +26,22 @@ type ChatRoom struct {
 	Sender *User `json:"-" gorm:"foreignKey:message_sender_id"`
 }
 
-func (cr *ChatRoom) AddMembers(userIds []uint64) error {
+func (cr *ChatRoom) AddMembers(userIds []uint64, DB *gorm.DB) error {
 	var chatMembers ChatMembers
 
-	for _, uId := range userIds {
-		chatMembers = append(chatMembers, ChatMember{ChatId: cr.Id, UserId: uId})
+	if cr == nil || cr.Id <= 0 {
+		return errors.New("invalid chat id")
 	}
 
-	return chatMembers.Create()
+	for _, uId := range userIds {
+		chatMembers = append(chatMembers, ChatMember{ChatId: cr.Id, UserId: uId, RoleId: dict.Dicts.ChatRole["user"].Id})
+	}
+
+	return chatMembers.Create(DB)
 }
 
-func (cr *ChatRoom) Create() error {
-	return config.DB.Create(&cr).Error
+func (cr *ChatRoom) Create(DB *gorm.DB) error {
+	return DB.Create(&cr).Error
 }
 
 func (*ChatRoom) TableName() string {

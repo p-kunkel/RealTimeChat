@@ -1,10 +1,10 @@
 package models
 
 import (
-	"RealTimeChat/config"
 	"time"
 
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 type Message struct {
@@ -21,8 +21,8 @@ type Message struct {
 	User *User     `json:"-" gorm:"foreignKey:sender_id"`
 }
 
-func (m *Message) Create() error {
-	return config.DB.Create(&m).Error
+func (m *Message) Create(DB *gorm.DB) error {
+	return DB.Create(&m).Error
 }
 
 func (*Message) TableName() string {

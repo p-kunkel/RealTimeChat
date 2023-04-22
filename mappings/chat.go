@@ -13,7 +13,7 @@ func chatMapping(r *gin.Engine) {
 	chat := r.Group("chat", middl.Authenticate())
 	{
 		chat.POST("", contr.CreateChat)
-		chat.POST(":chat_id/user")
+		chat.POST(":chat_id/user", contr.AddMembersToChat)
 		chat.POST(":chat_id/message")
 
 		chat.GET(":chat_id/messages")

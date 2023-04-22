@@ -33,7 +33,8 @@ type Token struct {
 
 	claims jwt.MapClaims `json:"-" gorm:"-"`
 
-	User *User `json:"-" gorm:"foreignKey:user_id"`
+	User *User            `json:"-" gorm:"foreignKey:user_id"`
+	Type *dict.DTokenType `json:"-" gorm:"foreignKey:type_id"`
 }
 
 func NewToken(TokenType dict.DTokenType, DB *gorm.DB) (Token, error) {
