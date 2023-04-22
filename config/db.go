@@ -15,13 +15,13 @@ func ConnectToDB() error {
 	var (
 		err error
 	)
-	if DB, err = gorm.Open(postgres.Open(getDBAddres()), getDBConfig()); err != nil {
+	if DB, err = gorm.Open(postgres.Open(DBAddres()), getDBConfig()); err != nil {
 		return err
 	}
 	return nil
 }
 
-func getDBAddres() string {
+func DBAddres() string {
 	var (
 		host       = os.Getenv("DB_ADDRESS")
 		user       = os.Getenv("DB_LOGIN")

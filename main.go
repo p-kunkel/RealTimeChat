@@ -33,6 +33,8 @@ func main() {
 		os.Exit(0)
 	}
 
+	go models.ListenDatabase("message_notify", config.DBAddres(), models.ListenMessageNotify)
+
 	if err = dict.Dicts.LoadFromDB(); err != nil {
 		log.Fatalf("loading dicts failed: %s", err)
 	}
