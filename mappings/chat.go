@@ -8,7 +8,7 @@ import (
 )
 
 func chatMapping(r *gin.Engine) {
-	r.GET("chats", middl.Authenticate())
+	r.GET("chats", middl.Authenticate(), contr.GetUserChats)
 
 	chat := r.Group("chat", middl.Authenticate())
 	{

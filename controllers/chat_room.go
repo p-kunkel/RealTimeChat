@@ -73,3 +73,23 @@ func AddMembersToChat(c *gin.Context) {
 
 	c.Status(200)
 }
+
+func GetUserChats(c *gin.Context) {
+	var (
+		chatRooms models.ChatRooms
+		err       error
+		session   models.Session
+	)
+
+	if err = session.GetFromContext(c); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	if err = chatRooms.FindByUserId(session.UserId, config.DB); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	c.JSON(200, chatRooms)
+}
