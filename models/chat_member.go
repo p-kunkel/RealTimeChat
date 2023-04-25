@@ -2,6 +2,7 @@ package models
 
 import (
 	dict "RealTimeChat/dictionaries"
+	"RealTimeChat/helpers"
 	"errors"
 
 	"gorm.io/gorm"
@@ -32,11 +33,16 @@ func (cm *ChatMember) Create(DB *gorm.DB) error {
 }
 
 func (cm *ChatMembers) Find(DB *gorm.DB, scopes ...func(*gorm.DB) *gorm.DB) error {
-	return DB.Find(&cm).Error
+	return DB.Scopes(scopes...).Find(&cm).Error
+}
+
+func (cm *ChatMember) CheckItExist(DB *gorm.DB, scopes ...func(*gorm.DB) *gorm.DB) error {
+	scopes = append(scopes, func(db *gorm.DB) *gorm.DB { return db.Where("user_id = ? AND chat_id = ?", cm.UserId, cm.ChatId) })
+	return cm.Find(DB, scopes...)
 }
 
 func (cm *ChatMember) Find(DB *gorm.DB, scopes ...func(*gorm.DB) *gorm.DB) error {
-	return DB.Find(&cm).Error
+	return helpers.RecordMustExist(DB.Scopes(scopes...).Find(&cm))
 }
 
 func (*ChatMember) TableName() string {

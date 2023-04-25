@@ -34,6 +34,7 @@ func main() {
 	}
 
 	go models.ListenDatabase("message_notify", config.DBAddres(), models.ListenMessageNotify)
+	go models.ChatHub.Run()
 
 	if err = dict.Dicts.LoadFromDB(); err != nil {
 		log.Fatalf("loading dicts failed: %s", err)

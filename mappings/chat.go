@@ -14,10 +14,8 @@ func chatMapping(r *gin.Engine) {
 	{
 		chat.POST("", contr.CreateChat)
 		chat.POST(":chat_id/user", contr.AddMembersToChat)
-		chat.POST(":chat_id/message")
 
 		chat.GET(":chat_id/messages")
-		chat.GET(":chat_id/listen")
+		chat.GET(":chat_id/listen", contr.HandleChatConnection)
 	}
-
 }

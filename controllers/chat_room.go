@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
 
@@ -92,4 +93,45 @@ func GetUserChats(c *gin.Context) {
 	}
 
 	c.JSON(200, chatRooms)
+}
+
+func HandleChatConnection(c *gin.Context) {
+	var (
+		err        error
+		chatMember models.ChatMember
+		session    models.Session
+		upgrader   = websocket.Upgrader{
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+		}
+	)
+
+	if err = session.GetFromContext(c); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	chatMember.UserId = session.UserId
+	if chatMember.ChatId, err = strconv.ParseUint(c.Param("chat_id"), 10, 64); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	if err = chatMember.CheckItExist(config.DB); err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		HandleErrResponse(c, MakeErrResponse(err))
+		return
+	}
+
+	conn := &models.Connection{Send: make(chan []byte, 256), WS: ws}
+	s := models.Subscription{Conn: conn, Session: session, ChatId: chatMember.ChatId}
+	models.ChatHub.Register <- s
+
+	go s.WritePump()
+	go s.ReadPump()
 }

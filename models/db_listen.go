@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -34,9 +33,7 @@ func ListenMessageNotify(l *pq.Listener) {
 		}
 
 		notifyData.Data.Message.CreatedAt = notifyData.Data.Message.CreatedAt.UTC()
-
-		b, _ := json.MarshalIndent(notifyData, "", "\t")
-		fmt.Println("################################\n", string(b))
+		ChatHub.Broadcast <- notifyData.Data.Message
 
 		return
 	case <-time.After(2 * time.Minute):
